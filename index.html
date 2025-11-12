@@ -63,8 +63,16 @@
                 <input id="prod-cantidad" type="number" placeholder="Ej: 50" min="1" required>
               </div>
               <div class="form-group">
-                <label for="prod-precio">Precio por kg</label>
+                <label for="prod-precio">Precio</label>
                 <input id="prod-precio" type="number" placeholder="Ej: 2.50" step="0.01" min="0.01" required>
+              </div>
+              <div class="form-group">
+                <label for="prod-unidad">Vender por</label>
+                <select id="prod-unidad" required>
+                  <option value="kg">Kilo (kg)</option>
+                  <option value="unidad">Unidad</option>
+                  <option value="libra">Libra</option>
+                </select>
               </div>
               <div class="form-group">
                 <label for="prod-imagen">Imagen del producto</label>
@@ -95,6 +103,43 @@
         </div>
       </section>
     </main>
+
+    <!-- Página separada: Detalle de tienda -->
+    <div id="store-detail-page" style="display:none;position:fixed;top:80px;left:0;right:0;bottom:0;background:#f6fff5;z-index:80;overflow-y:auto;padding-right:0">
+      <div class="container">
+        <button id="store-detail-back" class="btn btn-outline" style="margin:1rem 0;">← Volver a tiendas</button>
+        <h2 id="store-detail-title">Productos</h2>
+        <p class="lead" id="store-detail-lead"></p>
+        <div id="store-detail-grid" class="grid" style="margin:1rem 0 3rem"></div>
+      </div>
+      <!-- Footer en detalle de tienda -->
+      <footer class="site-footer">
+        <div class="container footer-inner">
+          <div class="footer-col">
+            <h3>Campo Express</h3>
+            <p>Frutas y verduras frescas, seleccionadas con cariño.</p>
+          </div>
+          <div class="footer-col">
+            <h4>Contacto</h4>
+            <p>Email: contacto@campoexpress.com</p>
+          </div>
+        </div>
+        <div class="footer-bottom">
+          <div class="container">© 2025 Campo Express — </div>
+        </div>
+      </footer>
+    </div>
+
+    <!-- Sidebar Carrito (fijo) -->
+    <aside id="cart-sidebar" style="display:none;position:fixed;right:0;top:80px;width:320px;height:calc(100vh-80px);background:white;border-left:1px solid rgba(11,43,24,0.08);box-shadow:-4px 0 12px rgba(0,0,0,0.08);z-index:85;overflow-y:auto;padding:1.5rem;flex-direction:column">
+      <h3 style="margin:0 0 1rem;color:#10341e">Tu Carrito</h3>
+      <div id="cart-items-list" style="flex:1;overflow-y:auto;margin-bottom:1rem"></div>
+      <div id="cart-total" style="border-top:1px solid rgba(11,43,24,0.08);padding-top:0.75rem;margin-bottom:1rem;font-weight:600;color:var(--green)">Total: $0.00</div>
+      <div style="display:flex;gap:0.5rem">
+        <button id="cart-clear" class="btn btn-outline" style="flex:1;font-size:0.85rem">Vaciar</button>
+        <button id="cart-checkout" class="btn btn-primary" style="flex:1;font-size:0.85rem">Comprar</button>
+      </div>
+    </aside>
 
     <!-- Footer -->
     <footer id="contacto" class="site-footer">
@@ -303,8 +348,8 @@
           const tiendas = TIENDAS_POR_BARRIO[barrio] || [];
           if(tiendas.length > 0){
             lead.textContent = `Tiendas disponibles en ${barrio.charAt(0).toUpperCase() + barrio.slice(1)}`;
-            grid.innerHTML = tiendas.map(t=>`
-              <article class="card">
+            grid.innerHTML = tiendas.map((t, idx)=>`
+              <article class="card store-card" data-owner="${t.owner || t.email || ''}" data-idx="${idx}">
                 <img src="${t.imagen}" alt="${t.nombre}">
                 <div class="card-body">
                   <h3>${t.nombre}</h3>
@@ -315,11 +360,163 @@
                 </div>
               </article>
             `).join('');
+            // attach click handlers to open store page
+            setTimeout(()=>{
+              grid.querySelectorAll('.store-card').forEach(card=>{
+                card.style.cursor = 'pointer';
+                card.addEventListener('click', ()=>{
+                  const owner = card.dataset.owner;
+                  const idx = parseInt(card.dataset.idx || '0', 10);
+                  // open the dedicated store page (cliente view)
+                  openStorePage(owner, barrio, idx);
+                });
+              });
+            }, 50);
           } else {
             lead.textContent = 'No hay tiendas cercanas en tu barrio.';
             grid.innerHTML = '<div style="grid-column: 1/-1; text-align: center; padding: 2rem; color: var(--muted);"><p>Lo sentimos, aún no tenemos tiendas disponibles en tu área. Pronto llegará a tu barrio.</p></div>';
           }
         }
+
+        // Store page rendering and cart functions
+        const CART_KEY = 'campo_cart_v1';
+
+        function loadCart(){
+          try{ return JSON.parse(localStorage.getItem(CART_KEY) || '[]'); }catch(e){ return []; }
+        }
+        function saveCart(cart){ localStorage.setItem(CART_KEY, JSON.stringify(cart)); updateCartBadge(); }
+        function addToCart(item){
+          const cart = loadCart();
+          // try to find same product (same owner + nombre + unidad)
+          const idx = cart.findIndex(c=> c.owner === item.owner && c.nombre === item.nombre && c.unidad === item.unidad);
+          if(idx >= 0){ cart[idx].cantidad = parseFloat(cart[idx].cantidad) + parseFloat(item.cantidad); }
+          else { cart.push(item); }
+          saveCart(cart);
+        }
+
+        function updateCartBadge(){
+          const sidebar = document.getElementById('cart-sidebar');
+          const cart = loadCart();
+          const total = cart.reduce((s,i)=> s + Number(i.cantidad || 0), 0);
+          // show sidebar if cart has items AND user is logged in
+          const cur = localStorage.getItem(SESSION_KEY);
+          if(cur && sidebar){
+            if(total > 0){ sidebar.style.display = 'flex'; }
+            else{ sidebar.style.display = 'none'; }
+          }
+          // render cart items in sidebar
+          renderCartSidebar();
+        }
+
+        function renderCartSidebar(){
+          const list = document.getElementById('cart-items-list');
+          const totalDiv = document.getElementById('cart-total');
+          if(!list) return;
+          const cart = loadCart();
+          if(cart.length === 0){
+            list.innerHTML = '<p style="text-align:center;color:var(--muted);font-size:0.9rem">Carrito vacío</p>';
+            if(totalDiv) totalDiv.textContent = 'Total: $0.00';
+            return;
+          }
+          let grandTotal = 0;
+          list.innerHTML = cart.map((c,i)=>{
+            const subtotal = parseFloat(c.precio) * parseFloat(c.cantidad);
+            grandTotal += subtotal;
+            return `
+              <div style="padding:0.75rem;border-bottom:1px solid rgba(11,43,24,0.08);font-size:0.9rem">
+                <div style="font-weight:600;margin-bottom:0.25rem">${c.nombre}</div>
+                <div style="color:var(--muted);margin-bottom:0.25rem">${c.cantidad} ${c.unidad}</div>
+                <div style="color:var(--green);margin-bottom:0.5rem">$${subtotal.toFixed(2)}</div>
+                <button class="btn btn-outline" data-cart-remove="${i}" style="width:100%;padding:0.35rem;font-size:0.8rem">Quitar</button>
+              </div>
+            `;
+          }).join('');
+          if(totalDiv) totalDiv.textContent = `Total: $${grandTotal.toFixed(2)}`;
+          // bind remove buttons
+          list.querySelectorAll('[data-cart-remove]').forEach(btn=>{
+            btn.addEventListener('click', ()=>{
+              const i = parseInt(btn.dataset.cartRemove, 10);
+              const cart = loadCart();
+              cart.splice(i, 1);
+              saveCart(cart);
+            });
+          });
+        }
+
+        function openStorePage(ownerEmail, barrio, idx){
+          // show store detail page (full-screen overlay below navbar)
+          const tiendas = TIENDAS_POR_BARRIO[barrio] || [];
+          const tienda = tiendas[idx];
+          const detailPage = document.getElementById('store-detail-page');
+          if(detailPage) detailPage.style.display = 'block';
+          const title = document.getElementById('store-detail-title');
+          const lead = document.getElementById('store-detail-lead');
+          const grid = document.getElementById('store-detail-grid');
+          title.textContent = tienda?.nombre || 'Tienda';
+          lead.textContent = tienda?.descripcion || '';
+          // load products from owner
+          const key = `campo_productos_${ownerEmail}`;
+          let productos = [];
+          try{ productos = JSON.parse(localStorage.getItem(key) || '[]'); } catch(e){ productos = []; }
+          if(!grid) return;
+          if(productos.length === 0){
+            grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;color:var(--muted);padding:1.5rem">Esta tienda no tiene productos disponibles.</div>';
+          } else {
+            grid.innerHTML = productos.map((p, pidx)=>{
+              const qtyLabel = p.unidad === 'unidad' ? 'unidad(es)' : (p.unidad === 'libra' ? 'lb' : 'kg');
+              return `
+                <article class="card">
+                  ${p.imagen ? `<img src="${p.imagen}" alt="${p.nombre}">` : ''}
+                  <div class="card-body">
+                    <h3>${p.nombre}</h3>
+                    <p><strong>Disponible:</strong> ${p.cantidad} ${qtyLabel}</p>
+                    <p><strong>Precio:</strong> $${parseFloat(p.precio).toFixed(2)} / ${p.unidad || 'kg'}</p>
+                    <div style="margin-top:0.75rem;display:flex;gap:0.5rem;align-items:center">
+                      <input type="number" min="0.01" step="0.01" value="1" id="cart-qty-${pidx}" style="width:90px;padding:0.45rem;border-radius:8px;border:1px solid rgba(11,43,24,0.08)">
+                      <button class="btn btn-primary" data-pidx="${pidx}" data-owner="${ownerEmail}">Agregar</button>
+                    </div>
+                  </div>
+                </article>
+              `;
+            }).join('');
+            // bind add to cart
+            grid.querySelectorAll('.btn-primary').forEach(btn=>{
+              btn.addEventListener('click', ()=>{
+                const pidx = parseInt(btn.dataset.pidx,10);
+                const owner = btn.dataset.owner;
+                const prod = productos[pidx];
+                const input = document.getElementById(`cart-qty-${pidx}`);
+                const q = parseFloat(input?.value || '0');
+                if(!prod || q <= 0){ alert('Introduce una cantidad válida.'); return; }
+                const item = { owner, storeName: tienda?.nombre || '', nombre: prod.nombre, cantidad: q, unidad: prod.unidad || 'kg', precio: prod.precio, imagen: prod.imagen };
+                addToCart(item);
+                input.value = '1';
+              });
+            });
+          }
+          // back button
+          const back = document.getElementById('store-detail-back');
+          back?.addEventListener('click', ()=>{ closeStorePage(); });
+        }
+
+        function closeStorePage(){
+          const detailPage = document.getElementById('store-detail-page');
+          if(detailPage) detailPage.style.display = 'none';
+        }
+
+        // init cart badge
+        updateCartBadge();
+        // bind cart sidebar buttons
+        const clearBtn = document.getElementById('cart-clear');
+        const checkoutBtn = document.getElementById('cart-checkout');
+        clearBtn?.addEventListener('click', ()=>{
+          localStorage.setItem(CART_KEY, JSON.stringify([]));
+          updateCartBadge();
+          alert('Carrito vaciado.');
+        });
+        checkoutBtn?.addEventListener('click', ()=>{
+          alert('Función de compra próximamente.');
+        });
 
         async function hashPassword(password){
           const enc = new TextEncoder();
@@ -356,6 +553,11 @@
           
           if(tiendas) tiendas.style.display = 'none';
           if(panel) panel.style.display = 'block';
+          // ocultar secciones que no son necesarias para fruvers
+          const nosotrosSection = document.getElementById('nosotros');
+          const modeloSection = document.getElementById('modelo-de-negocio');
+          if(nosotrosSection) nosotrosSection.style.display = 'none';
+          if(modeloSection) modeloSection.style.display = 'none';
           
           // Cargar y mostrar productos del fruver
           const PRODUCTOS_KEY = `campo_productos_${email}`;
@@ -369,19 +571,24 @@
             if(productos.length === 0){
               productosLista.innerHTML = '<p style="grid-column: 1/-1; text-align: center; color: var(--muted);">No tienes productos aún. Agrega uno nuevo.</p>';
             } else {
-              productosLista.innerHTML = productos.map((p, idx)=>`
+              productosLista.innerHTML = productos.map((p, idx)=>{
+                const unidad = p.unidad || 'kg';
+                const unitLabel = unidad === 'unidad' ? 'unidad' : (unidad === 'libra' ? 'libra' : 'kg');
+                const qtyLabel = unidad === 'unidad' ? 'unidad(es)' : (unidad === 'libra' ? 'lb' : 'kg');
+                return `
                 <article class="card">
                   ${p.imagen ? `<img src="${p.imagen}" alt="${p.nombre}" style="width: 100%; height: 200px; object-fit: cover; border-radius: var(--radius);">` : ''}
                   <div class="card-body">
                     <h3>${p.nombre}</h3>
-                    <p><strong>Cantidad:</strong> ${p.cantidad} kg</p>
-                    <p><strong>Precio:</strong> $${parseFloat(p.precio).toFixed(2)} / kg</p>
+                    <p><strong>Cantidad:</strong> ${p.cantidad} ${qtyLabel}</p>
+                    <p><strong>Precio:</strong> $${parseFloat(p.precio).toFixed(2)} / ${unitLabel}</p>
                     <div class="card-foot">
                       <button class="btn btn-outline btn-delete" data-idx="${idx}">Eliminar</button>
                     </div>
                   </div>
                 </article>
-              `).join('');
+              `;
+              }).join('');
               // Agregar event listeners para eliminar
               productosLista.querySelectorAll('.btn-delete').forEach(btn=>{
                 btn.addEventListener('click', ()=>{
@@ -428,8 +635,12 @@
               access.remove();
               const span = document.createElement('span');
               span.className = 'nav-user';
-              const display = (user.email || '').split('@')[0] || user.email;
-              const direccionText = user.direccion ? ` - ${user.barrio || ''} - ${user.direccion}` : '';
+              // helper: capitalize first letter (safe for empty values)
+              const cap = (s) => { if(!s) return ''; return String(s).charAt(0).toUpperCase() + String(s).slice(1); };
+              const display = cap((user.email || '').split('@')[0] || user.email);
+              const barrioCap = cap(user.barrio || '');
+              const direccionCap = cap(user.direccion || '');
+              const direccionText = user.direccion ? ` - ${barrioCap} - ${direccionCap}` : '';
               span.textContent = `Hola, ${display}${direccionText}`;
               nav.appendChild(span);
               const out = document.createElement('button');
@@ -438,6 +649,18 @@
               out.textContent = 'Cerrar sesión';
               nav.appendChild(out);
               out.addEventListener('click', ()=>{ clearCurrentUser(); });
+
+              // mostrar/ocultar secciones según rol
+              const nosotrosSection = document.getElementById('nosotros');
+              const modeloSection = document.getElementById('modelo-de-negocio');
+              if(user.role === 'fruver'){
+                if(nosotrosSection) nosotrosSection.style.display = 'none';
+                if(modeloSection) modeloSection.style.display = 'none';
+              } else {
+                // cliente u otros: asegurarse de que las secciones sean visibles
+                if(nosotrosSection) nosotrosSection.style.display = '';
+                if(modeloSection) modeloSection.style.display = '';
+              }
             }
           } else {
             // Sin sesión: mostrar mensaje en productos y ocultar panel fruver
@@ -445,7 +668,14 @@
             const panel = document.getElementById('fruver-panel');
             if(tiendas) tiendas.style.display = 'block';
             if(panel) panel.style.display = 'none';
-            
+            // ocultar carrito cuando se cierra sesión
+            const cartSidebar = document.getElementById('cart-sidebar');
+            if(cartSidebar) cartSidebar.style.display = 'none';
+            // Asegurar que se muestren las secciones públicas cuando no hay sesión
+            const nosotrosSection = document.getElementById('nosotros');
+            const modeloSection = document.getElementById('modelo-de-negocio');
+            if(nosotrosSection) nosotrosSection.style.display = '';
+            if(modeloSection) modeloSection.style.display = '';
             const grid = document.getElementById('tiendas-grid');
             const lead = document.getElementById('productos-lead');
             if(grid && lead){
@@ -489,7 +719,8 @@
             const nuevaTienda = {
               nombre: nombreTienda,
               descripcion: `Tienda de frutas y verduras en ${direccion}.`,
-              imagen: imagenAleatoria
+              imagen: imagenAleatoria,
+              owner: email
             };
             if(!TIENDAS_POR_BARRIO[barrio]){
               TIENDAS_POR_BARRIO[barrio] = [];
@@ -528,8 +759,9 @@
           const nombre = (document.getElementById('prod-nombre')?.value || '').trim();
           const cantidad = parseInt(document.getElementById('prod-cantidad')?.value || '0');
           const precio = parseFloat(document.getElementById('prod-precio')?.value || '0');
+          const unidad = (document.getElementById('prod-unidad')?.value || 'kg');
           const imagenFile = document.getElementById('prod-imagen')?.files[0];
-          if(!nombre || cantidad <= 0 || precio <= 0 || !imagenFile){ alert('Completa todos los campos correctamente.'); return; }
+          if(!nombre || cantidad <= 0 || precio <= 0 || !imagenFile || !unidad){ alert('Completa todos los campos correctamente.'); return; }
           
           const reader = new FileReader();
           reader.onload = (event)=>{
@@ -540,7 +772,7 @@
               productos = JSON.parse(localStorage.getItem(PRODUCTOS_KEY) || '[]');
             } catch(e){ }
             
-            productos.push({ nombre, cantidad, precio, imagen: imagenBase64 });
+            productos.push({ nombre, cantidad, precio, unidad, imagen: imagenBase64 });
             localStorage.setItem(PRODUCTOS_KEY, JSON.stringify(productos));
             
             // Limpiar formulario

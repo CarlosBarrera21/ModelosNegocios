@@ -105,9 +105,34 @@ body{
 .form-group label{font-size:0.9rem;color:var(--muted);font-weight:500}
 .form-group input{padding:0.6rem 0.75rem;border:1px solid rgba(11,43,24,0.08);border-radius:8px;font-size:0.95rem}
 .form-group input:focus{outline:2px solid rgba(47,158,68,0.2)}
+
+/* Style for product unit select and file input */
+.form-group select{appearance:none;-webkit-appearance:none;-moz-appearance:none;padding:0.6rem 0.75rem;border-radius:8px;border:1px solid rgba(11,43,24,0.08);background:white;font-size:0.95rem}
+.form-group select:focus{outline:2px solid rgba(47,158,68,0.12);box-shadow:0 0 0 3px rgba(47,158,68,0.04)}
+
+.form-group input[type="file"]{padding:0.45rem 0.5rem;border:1px dashed rgba(11,43,24,0.06);border-radius:8px;background:linear-gradient(180deg, #fff, var(--cream));cursor:pointer}
+.form-group input[type="file"]:focus{outline:2px solid rgba(47,158,68,0.12)}
+
+/* Style the native file button where supported */
+.form-group input[type="file"]::file-selector-button{margin-right:0.5rem;background:var(--green);color:#fff;border:none;padding:0.45rem 0.7rem;border-radius:8px;cursor:pointer;font-weight:600}
+.form-group input[type="file"]::file-selector-button:hover{background:#267a35}
+
+/* Small helper text under the file input */
+.form-group .file-help{font-size:0.85rem;color:var(--muted);margin-top:0.25rem}
 .lista-productos h3{margin:0 0 1rem;color:#10341e}
 .btn-delete{background:#ff4444;border-color:#ff4444;color:white;padding:0.4rem 0.8rem;font-size:0.85rem}
 .btn-delete:hover{background:#cc0000;border-color:#cc0000}
+
+/* Cart sidebar */
+#cart-sidebar{display:flex !important;flex-direction:column}
+#cart-items-list{padding:0;margin:0}
+
+@media (max-width:1100px){
+  #cart-sidebar{width:280px}
+}
+@media (max-width:900px){
+  #cart-sidebar{display:none !important}
+}
 
 @media (max-width:900px){
   .fruver-content{grid-template-columns:1fr}
