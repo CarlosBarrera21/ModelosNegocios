@@ -29,6 +29,7 @@ body{
 .nav-links{display:flex;gap:1rem;align-items:center}
 .nav-links a{color:var(--muted);text-decoration:none;padding:0.35rem 0.5rem;border-radius:8px}
 .nav-links a:hover{color:var(--green)}
+.nav-user{color:var(--green);font-size:0.9rem;font-weight:500;padding:0.4rem 0.6rem;background:rgba(47,158,68,0.08);border-radius:8px;max-width:280px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .btn{font-weight:600;padding:0.5rem 0.9rem;border-radius:10px;border:0;cursor:pointer}
 .btn-primary{background:var(--green);color:white}
 .btn-cta{background:linear-gradient(90deg,var(--leaf),var(--green));color:white;border:0;padding:0.7rem 1.1rem;border-radius:12px;text-decoration:none;display:inline-block}
@@ -42,8 +43,43 @@ body{
 .hero-text h1{font-size:2rem;margin:0 0 0.5rem;color:#10341e}
 .hero-text p{margin:0 0 1rem;color:var(--muted)}
 .hero-visual{width:320px;display:flex;align-items:center;justify-content:center}
+.hero-visual img{max-width:250px;width:100%;height:auto}
 .bunch{display:grid;grid-template-columns:repeat(2,70px);gap:10px}
+/* Modelo de negocio: imagen zoomable y modal fullscreen */
+.model{padding:2rem 0}
+.model-inner{display:flex;align-items:center;justify-content:center;margin-top:1rem}
+.zoomable{cursor:pointer;max-width:480px;width:100%;height:auto;border-radius:10px;box-shadow:var(--card-shadow)}
+
+/* Fullscreen modal */
+.image-modal{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.85);z-index:9999;opacity:0;pointer-events:none;transition:opacity 220ms ease}
+.image-modal.open{opacity:1;pointer-events:auto}
+.image-modal img{max-width:95%;max-height:95%;width:auto;height:auto;border-radius:6px;box-shadow:0 20px 60px rgba(0,0,0,0.6)}
+.image-modal .close-hint{position:absolute;top:18px;right:22px;color:rgba(255,255,255,0.9);font-size:0.95rem}
+.no-scroll{overflow:hidden}
 .fruit{font-size:2.4rem;display:flex;align-items:center;justify-content:center;background:var(--cream);border-radius:14px;padding:0.8rem;box-shadow:var(--card-shadow)}
+
+/* Auth modal styles */
+.auth-modal{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.45);z-index:10000;opacity:0;pointer-events:none;transition:opacity 180ms ease}
+.auth-modal.open{opacity:1;pointer-events:auto}
+.auth-panel{background:white;border-radius:12px;max-width:420px;width:92%;padding:1.25rem 1.25rem 1.5rem;box-shadow:0 18px 48px rgba(11,43,24,0.3);position:relative}
+.auth-close{position:absolute;top:10px;right:12px;border:0;background:transparent;font-size:1.3rem;cursor:pointer;color:var(--muted)}
+.auth-tabs{display:flex;gap:0.5rem;margin-bottom:1rem}
+.auth-tab{flex:1;padding:0.5rem;border-radius:8px;border:1px solid rgba(11,43,24,0.06);background:transparent;cursor:pointer}
+.auth-tab.active{background:var(--green);color:white;border-color:var(--green)}
+.auth-body{min-height:40px}
+.auth-form{display:none;flex-direction:column;gap:0.5rem}
+.auth-form.active{display:flex}
+.auth-form label{font-size:0.85rem;color:var(--muted)}
+.auth-form input{padding:0.6rem 0.75rem;border-radius:8px;border:1px solid rgba(11,43,24,0.08);font-size:0.95rem}
+.auth-form .btn{margin-top:0.5rem}
+/* Style for select (role) */
+.auth-form select{appearance:none;-webkit-appearance:none;-moz-appearance:none;padding:0.6rem 0.75rem;border-radius:8px;border:1px solid rgba(11,43,24,0.08);background:white;font-size:0.95rem}
+.auth-form select:focus{outline:2px solid rgba(47,158,68,0.12);box-shadow:0 0 0 3px rgba(47,158,68,0.06)}
+.auth-form select option{padding:0.35rem}
+
+@media (max-width:480px){
+  .auth-panel{padding:1rem}
+}
 
 /* PRODUCTS */
 .products{padding:2.5rem 0}
