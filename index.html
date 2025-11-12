@@ -31,7 +31,6 @@
         <div class="hero-text">
           <h1>Frutas y verduras frescas, directo a tu puerta</h1>
           <p>Seleccionamos lo mejor del día para que disfrutes productos frescos, locales y saludables.</p>
-          <a class="btn btn-cta" href="#productos">Ver productos</a>
         </div>
         <div class="hero-visual">
           <img src="css/campoExpress.png" alt="Frutas y verduras frescas de Campo Express">
@@ -43,55 +42,42 @@
     <main class="container">
       <section id="productos" class="products">
         <h2>Nuestras Tiendas</h2>
-        <p class="lead">Elige las tiendas mas cercanas</p>
-        <div class="grid">
-          <article class="card">
-            <img src="https://via.placeholder.com/300x200?text=Manzanas" alt="Manzanas frescas">
-            <div class="card-body">
-              <h3>Manzana roja</h3>
-              <p>Deliciosas manzanas crujientes, ideales para snacks y postres.</p>
-              <div class="card-foot">
-                <span class="price">$2.50 / kg</span>
-                <button class="btn btn-outline">Agregar</button>
-              </div>
-            </div>
-          </article>
+        <p class="lead" id="productos-lead">Elige las tiendas mas cercanas</p>
+        <div class="grid" id="tiendas-grid">
+        </div>
+      </section>
 
-          <article class="card">
-            <img src="https://via.placeholder.com/300x200?text=Plátanos" alt="Plátanos maduros">
-            <div class="card-body">
-              <h3>Plátano</h3>
-              <p>Maduros y dulces, perfectos para batidos y snacks.</p>
-              <div class="card-foot">
-                <span class="price">$1.80 / kg</span>
-                <button class="btn btn-outline">Agregar</button>
+      <!-- Panel de productos para fruvers -->
+      <section id="fruver-panel" class="products" style="display:none;">
+        <h2>Mis Productos</h2>
+        <div class="fruver-content">
+          <div class="agregar-producto">
+            <h3>Agregar nuevo producto</h3>
+            <form id="form-producto">
+              <div class="form-group">
+                <label for="prod-nombre">Nombre del producto</label>
+                <input id="prod-nombre" type="text" placeholder="Ej: Manzana roja" required>
               </div>
-            </div>
-          </article>
-
-          <article class="card">
-            <img src="https://via.placeholder.com/300x200?text=Zanahorias" alt="Zanahorias frescas">
-            <div class="card-body">
-              <h3>Zanahoria</h3>
-              <p>Crujientes y llenas de sabor, excelentes para cocinar y ensaladas.</p>
-              <div class="card-foot">
-                <span class="price">$1.20 / kg</span>
-                <button class="btn btn-outline">Agregar</button>
+              <div class="form-group">
+                <label for="prod-cantidad">Cantidad disponible</label>
+                <input id="prod-cantidad" type="number" placeholder="Ej: 50" min="1" required>
               </div>
-            </div>
-          </article>
-
-          <article class="card">
-            <img src="https://via.placeholder.com/300x200?text=Paquete+Eco" alt="Paquete eco">
-            <div class="card-body">
-              <h3>Pack Eco</h3>
-              <p>Selección de temporada: frutas y verduras para una familia pequeña.</p>
-              <div class="card-foot">
-                <span class="price">$12.00 / pack</span>
-                <button class="btn btn-outline">Agregar</button>
+              <div class="form-group">
+                <label for="prod-precio">Precio por kg</label>
+                <input id="prod-precio" type="number" placeholder="Ej: 2.50" step="0.01" min="0.01" required>
               </div>
+              <div class="form-group">
+                <label for="prod-imagen">Imagen del producto</label>
+                <input id="prod-imagen" type="file" accept="image/*" required>
+              </div>
+              <button class="btn btn-primary" type="submit">Agregar producto</button>
+            </form>
+          </div>
+          <div class="lista-productos">
+            <h3>Productos disponibles</h3>
+            <div id="productos-list" class="grid">
             </div>
-          </article>
+          </div>
         </div>
       </section>
 
@@ -282,11 +268,58 @@
         // Real auth logic (client-side demo using localStorage)
         const USERS_KEY = 'campo_users_v1';
         const SESSION_KEY = 'campo_current_user_v1';
+        const TIENDAS_KEY = 'campo_tiendas_v1';
+
+        // Base de datos de tiendas por barrio (inicial)
+        let TIENDAS_POR_BARRIO = {
+          'cabecera': [],
+          'provenza': [],
+          'san-alonso': []
+        };
 
         function loadUsers(){
           try{ return JSON.parse(localStorage.getItem(USERS_KEY) || '{}'); }catch(e){ return {}; }
         }
         function saveUsers(obj){ localStorage.setItem(USERS_KEY, JSON.stringify(obj)); }
+
+        function loadTiendas(){
+          try{ 
+            const stored = JSON.parse(localStorage.getItem(TIENDAS_KEY) || '{}');
+            TIENDAS_POR_BARRIO = { ...TIENDAS_POR_BARRIO, ...stored };
+          } catch(e){ }
+        }
+
+        function saveTiendas(){
+          localStorage.setItem(TIENDAS_KEY, JSON.stringify(TIENDAS_POR_BARRIO));
+        }
+
+        // Cargar tiendas al inicializar
+        loadTiendas();
+
+        function renderTiendas(barrio){
+          const grid = document.getElementById('tiendas-grid');
+          const lead = document.getElementById('productos-lead');
+          if(!grid) return;
+          const tiendas = TIENDAS_POR_BARRIO[barrio] || [];
+          if(tiendas.length > 0){
+            lead.textContent = `Tiendas disponibles en ${barrio.charAt(0).toUpperCase() + barrio.slice(1)}`;
+            grid.innerHTML = tiendas.map(t=>`
+              <article class="card">
+                <img src="${t.imagen}" alt="${t.nombre}">
+                <div class="card-body">
+                  <h3>${t.nombre}</h3>
+                  <p>${t.descripcion}</p>
+                  <div class="card-foot">
+                    <span class="price">Tienda</span>
+                  </div>
+                </div>
+              </article>
+            `).join('');
+          } else {
+            lead.textContent = 'No hay tiendas cercanas en tu barrio.';
+            grid.innerHTML = '<div style="grid-column: 1/-1; text-align: center; padding: 2rem; color: var(--muted);"><p>Lo sentimos, aún no tenemos tiendas disponibles en tu área. Pronto llegará a tu barrio.</p></div>';
+          }
+        }
 
         async function hashPassword(password){
           const enc = new TextEncoder();
@@ -296,7 +329,70 @@
 
         function setCurrentUser(key){
           localStorage.setItem(SESSION_KEY, key);
+          const users = loadUsers();
+          const user = users[key];
+          if(user){
+            if(user.role === 'fruver'){
+              // Mostrar panel de fruver
+              renderFruverPanel(key);
+            } else if(user.barrio){
+              // Mostrar tiendas para cliente
+              renderTiendas(user.barrio);
+            }
+          }
           renderUserState();
+        }
+
+        function clearCurrentUser(){
+          localStorage.removeItem(SESSION_KEY);
+          renderUserState();
+        }
+
+        function renderFruverPanel(email){
+          const tiendas = document.getElementById('productos');
+          const panel = document.getElementById('fruver-panel');
+          const tiendas_grid = document.getElementById('tiendas-grid');
+          const productos_lead = document.getElementById('productos-lead');
+          
+          if(tiendas) tiendas.style.display = 'none';
+          if(panel) panel.style.display = 'block';
+          
+          // Cargar y mostrar productos del fruver
+          const PRODUCTOS_KEY = `campo_productos_${email}`;
+          let productos = [];
+          try{
+            productos = JSON.parse(localStorage.getItem(PRODUCTOS_KEY) || '[]');
+          } catch(e){ }
+          
+          const productosLista = document.getElementById('productos-list');
+          if(productosLista){
+            if(productos.length === 0){
+              productosLista.innerHTML = '<p style="grid-column: 1/-1; text-align: center; color: var(--muted);">No tienes productos aún. Agrega uno nuevo.</p>';
+            } else {
+              productosLista.innerHTML = productos.map((p, idx)=>`
+                <article class="card">
+                  ${p.imagen ? `<img src="${p.imagen}" alt="${p.nombre}" style="width: 100%; height: 200px; object-fit: cover; border-radius: var(--radius);">` : ''}
+                  <div class="card-body">
+                    <h3>${p.nombre}</h3>
+                    <p><strong>Cantidad:</strong> ${p.cantidad} kg</p>
+                    <p><strong>Precio:</strong> $${parseFloat(p.precio).toFixed(2)} / kg</p>
+                    <div class="card-foot">
+                      <button class="btn btn-outline btn-delete" data-idx="${idx}">Eliminar</button>
+                    </div>
+                  </div>
+                </article>
+              `).join('');
+              // Agregar event listeners para eliminar
+              productosLista.querySelectorAll('.btn-delete').forEach(btn=>{
+                btn.addEventListener('click', ()=>{
+                  const idx = parseInt(btn.dataset.idx);
+                  productos.splice(idx, 1);
+                  localStorage.setItem(PRODUCTOS_KEY, JSON.stringify(productos));
+                  renderFruverPanel(email);
+                });
+              });
+            }
+          }
         }
 
         function clearCurrentUser(){
@@ -343,6 +439,19 @@
               nav.appendChild(out);
               out.addEventListener('click', ()=>{ clearCurrentUser(); });
             }
+          } else {
+            // Sin sesión: mostrar mensaje en productos y ocultar panel fruver
+            const tiendas = document.getElementById('productos');
+            const panel = document.getElementById('fruver-panel');
+            if(tiendas) tiendas.style.display = 'block';
+            if(panel) panel.style.display = 'none';
+            
+            const grid = document.getElementById('tiendas-grid');
+            const lead = document.getElementById('productos-lead');
+            if(grid && lead){
+              lead.textContent = 'Inicia sesión para ver las tiendas disponibles en tu barrio.';
+              grid.innerHTML = '<div style="grid-column: 1/-1; text-align: center; padding: 3rem; color: var(--muted);"><p style="font-size: 1.1rem;">Por favor, inicia sesión para acceder a las tiendas disponibles en tu área.</p></div>';
+            }
           }
         }
 
@@ -365,6 +474,29 @@
           const hash = await hashPassword(password);
           users[key] = { email, passwordHash: hash, role, barrio, direccion, createdAt: new Date().toISOString() };
           saveUsers(users);
+          // Si es fruver, agregar la tienda a la lista del barrio
+          if(role === 'fruver'){
+            const nombreTienda = `Fruver ${(email.split('@')[0]).charAt(0).toUpperCase() + (email.split('@')[0]).slice(1)}`;
+            // Lista de imágenes disponibles en css/fruvers
+            const imagenesDisponibles = [
+              'css/fruvers/fruver1.jpg',
+              'css/fruvers/fruver2.jpg',
+              'css/fruvers/fruver3.jpg',
+              'css/fruvers/fruver4.jpg',
+              'css/fruvers/fruver5.jpg'
+            ];
+            const imagenAleatoria = imagenesDisponibles[Math.floor(Math.random() * imagenesDisponibles.length)];
+            const nuevaTienda = {
+              nombre: nombreTienda,
+              descripcion: `Tienda de frutas y verduras en ${direccion}.`,
+              imagen: imagenAleatoria
+            };
+            if(!TIENDAS_POR_BARRIO[barrio]){
+              TIENDAS_POR_BARRIO[barrio] = [];
+            }
+            TIENDAS_POR_BARRIO[barrio].push(nuevaTienda);
+            saveTiendas();
+          }
           setCurrentUser(key);
           alert('Cuenta creada.');
           closeAuth();
@@ -385,6 +517,39 @@
           if(hash !== user.passwordHash){ alert('Contraseña incorrecta.'); return; }
           setCurrentUser(key);
           closeAuth();
+        });
+
+        // Handle agregar producto para fruver
+        const formProducto = document.getElementById('form-producto');
+        formProducto?.addEventListener('submit', (e)=>{
+          e.preventDefault();
+          const cur = localStorage.getItem(SESSION_KEY);
+          if(!cur) return;
+          const nombre = (document.getElementById('prod-nombre')?.value || '').trim();
+          const cantidad = parseInt(document.getElementById('prod-cantidad')?.value || '0');
+          const precio = parseFloat(document.getElementById('prod-precio')?.value || '0');
+          const imagenFile = document.getElementById('prod-imagen')?.files[0];
+          if(!nombre || cantidad <= 0 || precio <= 0 || !imagenFile){ alert('Completa todos los campos correctamente.'); return; }
+          
+          const reader = new FileReader();
+          reader.onload = (event)=>{
+            const imagenBase64 = event.target.result;
+            const PRODUCTOS_KEY = `campo_productos_${cur}`;
+            let productos = [];
+            try{
+              productos = JSON.parse(localStorage.getItem(PRODUCTOS_KEY) || '[]');
+            } catch(e){ }
+            
+            productos.push({ nombre, cantidad, precio, imagen: imagenBase64 });
+            localStorage.setItem(PRODUCTOS_KEY, JSON.stringify(productos));
+            
+            // Limpiar formulario
+            formProducto.reset();
+            // Actualizar lista
+            renderFruverPanel(cur);
+            alert('Producto agregado correctamente.');
+          };
+          reader.readAsDataURL(imagenFile);
         });
 
         // initialize UI state
