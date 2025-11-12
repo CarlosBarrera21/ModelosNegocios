@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Campo Express</title>
+    <link rel="stylesheet" href="css/styles.css">
+  <!-- Favicon and manifest -->
+  <link rel="apple-touch-icon" href="assets/campoExpress.png">
+  <link rel="icon" type="image/png" href="assets/campoExpress.png">
+  <link rel="manifest" href="site.webmanifest">
+  <meta name="theme-color" content="#2F9E44">
+  </head>
+  <body>
+    <!-- Navbar -->
+    <header class="navbar">
+      <div class="container nav-inner">
+        <a class="brand" href="#">Campo Express</a>
+        <nav class="nav-links">
+          <a href="#productos">Productos</a>
+          <a href="#nosotros">Nosotros</a>
+          <a href="#contacto">Contacto</a>
+          <button class="btn btn-primary">Ordenar ahora</button>
+        </nav>
+        <button class="nav-toggle" aria-label="Abrir menú">☰</button>
+      </div>
+    </header>
+
+    <!-- Hero -->
+    <section class="hero">
+      <div class="container hero-inner">
+        <div class="hero-text">
+          <h1>Frutas y verduras frescas, directo a tu puerta</h1>
+          <p>Seleccionamos lo mejor del día para que disfrutes productos frescos, locales y saludables.</p>
+          <a class="btn btn-cta" href="#productos">Ver productos</a>
+        </div>
+        <div class="hero-visual" aria-hidden="true">
+          <div class="bunch">
+            <div class="fruit apple">🍎</div>
+            <div class="fruit banana">🍌</div>
+            <div class="fruit carrot">🥕</div>
+            <div class="fruit pear">🍐</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Productos -->
+    <main class="container">
+      <section id="productos" class="products">
+        <h2>Nuestros productos</h2>
+        <p class="lead">Elige entre frutas, verduras y paquetes frescos preparados para ti.</p>
+        <div class="grid">
+          <article class="card">
+            <img src="https://via.placeholder.com/300x200?text=Manzanas" alt="Manzanas frescas">
+            <div class="card-body">
+              <h3>Manzana roja</h3>
+              <p>Deliciosas manzanas crujientes, ideales para snacks y postres.</p>
+              <div class="card-foot">
+                <span class="price">$2.50 / kg</span>
+                <button class="btn btn-outline">Agregar</button>
+              </div>
+            </div>
+          </article>
+
+          <article class="card">
+            <img src="https://via.placeholder.com/300x200?text=Plátanos" alt="Plátanos maduros">
+            <div class="card-body">
+              <h3>Plátano</h3>
+              <p>Maduros y dulces, perfectos para batidos y snacks.</p>
+              <div class="card-foot">
+                <span class="price">$1.80 / kg</span>
+                <button class="btn btn-outline">Agregar</button>
+              </div>
+            </div>
+          </article>
+
+          <article class="card">
+            <img src="https://via.placeholder.com/300x200?text=Zanahorias" alt="Zanahorias frescas">
+            <div class="card-body">
+              <h3>Zanahoria</h3>
+              <p>Crujientes y llenas de sabor, excelentes para cocinar y ensaladas.</p>
+              <div class="card-foot">
+                <span class="price">$1.20 / kg</span>
+                <button class="btn btn-outline">Agregar</button>
+              </div>
+            </div>
+          </article>
+
+          <article class="card">
+            <img src="https://via.placeholder.com/300x200?text=Paquete+Eco" alt="Paquete eco">
+            <div class="card-body">
+              <h3>Pack Eco</h3>
+              <p>Selección de temporada: frutas y verduras para una familia pequeña.</p>
+              <div class="card-foot">
+                <span class="price">$12.00 / pack</span>
+                <button class="btn btn-outline">Agregar</button>
+              </div>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <!-- Sección Nosotros -->
+      <section id="nosotros" class="about">
+        <h2>Nosotros</h2>
+        <p>Fruver Virtual es un mercado digital que conecta pequeños productores con consumidores que buscan calidad y frescura.</p>
+      </section>
+    </main>
+
+    <!-- Footer -->
+    <footer id="contacto" class="site-footer">
+      <div class="container footer-inner">
+        <div class="footer-col">
+          <h3>Fruver Virtual</h3>
+          <p>Frutas y verduras frescas, seleccionadas con cariño.</p>
+        </div>
+        <div class="footer-col">
+          <h4>Contacto</h4>
+          <p>Email: hola@fruvervirtual.example</p>
+          <p>Tel: +57 300 000 0000</p>
+        </div>
+        <div class="footer-col">
+          <h4>Síguenos</h4>
+          <p>🍎 Instagram · 🍌 Facebook · 🥕 WhatsApp</p>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <div class="container">© 2025 Fruver Virtual — Hecho con ❤</div>
+      </div>
+    </footer>
+
+    <script>
+      // Simple toggle para menú móvil
+      const toggle = document.querySelector('.nav-toggle');
+      const navLinks = document.querySelector('.nav-links');
+      toggle?.addEventListener('click', ()=>{
+        navLinks?.classList.toggle('open');
+      });
+    </script>
+  </body>
+</html>

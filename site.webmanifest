@@ -1,0 +1,14 @@
+{
+  "name": "Campo Express",
+  "short_name": "Fruver",
+  "icons": [
+    {
+      "src": "assets/campoExpress.png",
+      "sizes": "64x64",
+      "type": "image/png"
+    }
+  ],
+  "theme_color": "#2F9E44",
+  "background_color": "#F6FFF5",
+  "display": "standalone"
+}
